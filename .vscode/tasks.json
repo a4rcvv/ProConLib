@@ -1,0 +1,23 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "0.1.0",
+    "isShellCommand": true,
+    "showOutput": "always",
+    "suppressTaskName": true,
+    "tasks":[
+        {
+            "isBuildCommand": true,
+            "command": "g++",
+            "taskName":"Build",
+            "args": ["-std=c++14","-g","-o","${fileBasenameNoExtension}","${fileBasename}"],
+        },
+        {
+            
+            "taskName": "Run",
+            "command": "./${fileBasenameNoExtension}",
+            
+        }
+    ],
+    
+}
