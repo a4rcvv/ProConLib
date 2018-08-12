@@ -1,2 +1,5 @@
 .vscode/*
 .DS_Store
+math.dSYM/Contents/Info.plist
+math.dSYM/Contents/Resources/DWARF/math
+math
