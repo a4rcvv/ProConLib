@@ -53,7 +53,7 @@ bool is_same(int x, int y) {
 
 } // namespace UF
 
-// verify code
+/* verify code
 
 int main(void) {
     int n, q;
@@ -70,3 +70,4 @@ int main(void) {
     }
     return 0;
 }
+*/

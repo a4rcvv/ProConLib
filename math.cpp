@@ -12,6 +12,7 @@ using std::cout;
 using std::endl;
 
 uint64_t get_combination_count(uint_fast16_t, uint_fast16_t);
+
 uint64_t get_permutation_count(uint_fast16_t, uint_fast16_t);
 uint64_t get_factorial(uint_fast16_t);
 
