@@ -13,6 +13,8 @@ using std::cout;
 using std::endl;
 
 // Measure the time.
+// Note: This class uses <chrono>. When you use and error is occurred, check
+// whether you include it.
 class Timer {
   std::chrono::system_clock::time_point start_time_;
 
