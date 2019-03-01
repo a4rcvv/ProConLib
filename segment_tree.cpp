@@ -16,7 +16,7 @@ using std::endl;
 // You have to inherit it and override Compare() and QueryCompare().
 template <typename T>
 class SegmentTree {
- protected:
+ private:
   // the size of original data.
   int range_;
   // initializer.
@@ -144,7 +144,7 @@ void SegmentTree<T>::OutputTree(void) {
 // for verifying
 // This code solves AOJ Range Query - Range Minimum Query (RMQ).
 class RMQTree : public SegmentTree<int> {
- protected:
+ private:
   int CompareQuery(int left, int right);
   int Compare(int left, int right);
 
