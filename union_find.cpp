@@ -11,63 +11,71 @@ using std::cin;
 using std::cout;
 using std::endl;
 
-namespace UF {
+// Manages Union-Find Forest.
+class UnionFindForest {
+  std::vector<int> parent;
+  std::vector<int> rank;
 
-const int MAX_N = 100000;
-int parent[MAX_N];
-int rank[MAX_N];
-
-void initialize(int n) {
-    for (int i = 0; i < n; i++) {
-        parent[i] = i;
-        rank[i]   = 0;
-    }
+ public:
+  // Initialize forest.
+  // parent[i]=i, rank[i]=0.
+  UnionFindForest(int n);
+  // Get the number of the root of the node q.
+  int Root(int q);
+  // Return true if the roots of x and y is same.
+  bool is_same(int x, int y);
+  // Unite the tree x and tree y.
+  void Unite(int x, int y);
+};
+UnionFindForest::UnionFindForest(int n) {
+  for (int i = 0; i < n; i++) {
+    parent.push_back(i);
+    rank.push_back(0);
+  }
+}
+int UnionFindForest::Root(int q) {
+  if (parent[q] == q) {
+    return q;
+  } else {
+    return parent[q] = Root(parent[q]);
+  }
 }
 
-int find(int x) {
-    if (parent[x] == x) {
-        return x;
-    } else {
-        return parent[x] = find(parent[x]);
-    }
+bool UnionFindForest::is_same(int x, int y) {
+  return Root(x) == Root(y);
 }
 
-void unite(int x, int y) {
-    x = find(x);
-    y = find(y);
-    if (x == y)
-        return;
-
-    if (rank[x] < rank[y]) {
-        parent[x] = y;
-    } else {
-        parent[y] = x;
-    }
-    if (rank[x] == rank[y])
-        rank[x]++;
+void UnionFindForest::Unite(int x, int y) {
+  x = Root(x);
+  y = Root(y);
+  if (x == y) return;
+  if (rank[x] < rank[y]) {
+    parent[x] = y;
+  } else {
+    parent[y] = x;
+    if (rank[x] == rank[y]) rank[x]++;
+  }
 }
 
-bool is_same(int x, int y) {
-    return find(x) == find(y);
-}
+// for verifying
 
-} // namespace UF
-
-/* verify code
+// this code solves Disjoint Set: Union Find
+// Tree(http://judge.u-aizu.ac.jp/onlinejudge/description.jsp?id=DSL_1_A&lang=jp)
 
 int main(void) {
-    int n, q;
-    cin >> n >> q;
-    UF::initialize(n);
-    for (int i = 0; i < q; i++) {
-        int c, x, y;
-        cin >> c >> x >> y;
-        if (c == 0) {
-            UF::unite(x, y);
-        } else {
-            cout << UF::is_same(x, y) << endl;
-        }
+  int n, q;
+  cin >> n >> q;
+  UnionFindForest UF(n);
+  for (int i = 0; i < q; i++) {
+    int com, x, y;
+    cin >> com >> x >> y;
+    switch (com) {
+      case 0:
+        UF.Unite(x, y);
+        break;
+      case 1:
+        cout << UF.is_same(x, y) << endl;
+        break;
     }
-    return 0;
+  }
 }
-*/
