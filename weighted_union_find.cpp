@@ -29,12 +29,13 @@ class WeightedUnionFindForest {
   bool IsSame(int x, int y);
   // Unite the tree x and tree y(weight is w).
   // If x and y already have been united, return false.
+  // Weight(y)-Weight(x)=w
   bool Unite(int x, int y, int w);
   // Get the number of nodes which are the same group as node q.
   int Size(int q);
   // Get the weight of node q.
   int Weight(int q);
-  // Get the weights' difference of node x and y.
+  // Get the weights' difference of node x and y(Weight(y)-Weight(x)).
   int Diff(int x, int y);
 };
 
