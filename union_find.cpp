@@ -19,7 +19,7 @@ class UnionFindForest {
 
  public:
   // Initialize forest.
-  // parent[i]=i, rank[i]=0.
+  // parent_[i]=i, rank_[i]=0, size_[i]=1.
   UnionFindForest(int n);
   // Get the number of the root of the node q.
   int Root(int q);
