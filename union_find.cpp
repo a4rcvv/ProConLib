@@ -20,27 +20,31 @@ class UnionFindForest {
  public:
   // Initialize forest.
   // parent_[i]=i, rank_[i]=0, size_[i]=1.
-  UnionFindForest(int n);
+  UnionFindForest(const int &n);
   // Get the number of the root of the node q.
-  int Root(int q);
+  int Root(const int &q);
   // Return true if the roots of x and y is same.
-  bool IsSame(int x, int y);
+  bool IsSame(const int &x, const int &y);
   // Unite the tree x and tree y.
   void Unite(int x, int y);
   // Get the number of nodes which are the same group as node q.
-  int Size(int q);
+  int Size(const int &q);
 };
-int UnionFindForest::Size(int q) {
-  return size_[Root(q)];
-}
-UnionFindForest::UnionFindForest(int n) {
+UnionFindForest::UnionFindForest(const int &n) {
+  parent_.resize(n);
+  rank_.resize(n);
+  size_.resize(n);
   for (int i = 0; i < n; i++) {
-    parent_.push_back(i);
-    rank_.push_back(0);
-    size_.push_back(1);
+    parent_[i] = i;
+    rank_[i]   = 0;
+    size_[i]   = 1;
   }
 }
-int UnionFindForest::Root(int q) {
+int UnionFindForest::Size(const int &q) {
+  return size_[Root(q)];
+}
+
+int UnionFindForest::Root(const int &q) {
   if (parent_[q] == q) {
     return q;
   } else {
@@ -48,7 +52,7 @@ int UnionFindForest::Root(int q) {
   }
 }
 
-bool UnionFindForest::IsSame(int x, int y) {
+bool UnionFindForest::IsSame(const int &x, const int &y) {
   return Root(x) == Root(y);
 }
 
