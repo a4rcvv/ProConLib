@@ -22,53 +22,57 @@ class WeightedUnionFindForest {
  public:
   // Initialize forest.
   // parent_[i]=i, rank_[i]=0, size_[i]=1, weight_[i]=0.
-  WeightedUnionFindForest(int n);
+  WeightedUnionFindForest(const int &n);
   // Get the number of the root of the node q.
-  int Root(int q);
+  int Root(const int &q);
   // Return true if the roots of x and y is same.
-  bool IsSame(int x, int y);
+  bool IsSame(const int &x, const int &y);
   // Unite the tree x and tree y(weight is w).
   // If x and y already have been united, return false.
   // Weight(y)-Weight(x)=w
   bool Unite(int x, int y, int w);
   // Get the number of nodes which are the same group as node q.
-  int Size(int q);
+  int Size(const int &q);
   // Get the weight of node q.
-  int Weight(int q);
+  int Weight(const int &q);
   // Get the weights' difference of node x and y(Weight(y)-Weight(x)).
-  int Diff(int x, int y);
+  int Diff(const int &x, const int &y);
 };
 
-WeightedUnionFindForest::WeightedUnionFindForest(int n) {
+WeightedUnionFindForest::WeightedUnionFindForest(const int &n) {
+  parent_.resize(n);
+  rank_.resize(n);
+  size_.resize(n);
+  weight_.resize(n);
   for (int i = 0; i < n; i++) {
-    parent_.push_back(i);
-    rank_.push_back(0);
-    size_.push_back(1);
-    weight_.push_back(0);
+    parent_[i] = i;
+    rank_[i]   = 0;
+    size_[i]   = 1;
+    weight_[i] = 0;
   }
 }
-int WeightedUnionFindForest::Size(int q) {
+int WeightedUnionFindForest::Size(const int &q) {
   return size_[Root(q)];
 }
-int WeightedUnionFindForest::Root(int q) {
+int WeightedUnionFindForest::Root(const int &q) {
   if (parent_[q] == q) {
     return q;
   } else {
-    int r = Root(parent_[q]);
+    const int r = Root(parent_[q]);
     weight_[q] += weight_[parent_[q]];
     return parent_[q] = r;
   }
 }
 
-bool WeightedUnionFindForest::IsSame(int x, int y) {
+bool WeightedUnionFindForest::IsSame(const int &x, const int &y) {
   return Root(x) == Root(y);
 }
 
-int WeightedUnionFindForest::Weight(int q) {
+int WeightedUnionFindForest::Weight(const int &q) {
   Root(q);  // compress path
   return weight_[q];
 }
-int WeightedUnionFindForest::Diff(int x, int y) {
+int WeightedUnionFindForest::Diff(const int &x, const int &y) {
   if (Root(x) != Root(y)) {
     cerr << "WeightedUnionFindForest: Error" << endl;
     cerr << "Roots of node x and y aren't same" << endl;
