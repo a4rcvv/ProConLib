@@ -27,12 +27,12 @@ class AnnealManager {
   double temperature_ = 100.0;
   double Cool();
   bool ShouldContinue();
-  int64_t Eval(AnnealState);
+  int64_t Eval(const AnnealState &state);
   AnnealState Neighbor(AnnealState);
   bool ShouldMoveToLowScore(int64_t, int64_t, double);
 
  public:
-  AnnealState Anneal(AnnealState);
+  AnnealState Anneal(const AnnealState &start_state);
 };
 
 // These 5 functions should be defined.
@@ -41,14 +41,14 @@ bool AnnealManager::ShouldContinue() {}
 // [IMPORTANT] If "The less a score is, The better a state is" , this function
 // MUST return "(true score)*(-1)". This class regards a high score as a good
 // state.
-int64_t AnnealManager::Eval(AnnealState state) {}
+int64_t AnnealManager::Eval(const AnnealState &state) {}
 AnnealState AnnealManager::Neighbor(AnnealState state) {}
 bool ShouldMoveToLowScore(int64_t prev_e, int64_t next_e, double temperature) {
   // If prev<next, this function must return true.
   if (prev_e < next_e) return true;
 }
 
-AnnealState AnnealManager::Anneal(AnnealState start_state) {
+AnnealState AnnealManager::Anneal(const AnnealState &start_state) {
   AnnealState state      = start_state;
   int64_t e              = Eval(state);
   AnnealState best_state = state;
