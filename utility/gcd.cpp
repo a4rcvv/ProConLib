@@ -11,7 +11,7 @@ using std::cin;
 using std::cout;
 using std::endl;
 
-int get_gcd(int a, int b) {
+int GCD(int a, int b) {
     if (a < b)
         std::swap(a, b);
     int r;
