@@ -11,7 +11,7 @@ using std::endl;
 using std::cerr;
 using std::cin;
 
-constexpr int64_t EuclidMod(int64_t v, int64_t m){
+int64_t EuclidMod(int64_t v, int64_t m){
   if(0 <= v && v < m){
     return v;
   }else if(-m <= v && v < 0){
@@ -38,77 +38,118 @@ int64_t ModInv(int64_t a, int64_t m){
   return u;
 }
 
+// return base^exponent (MOD. mod).
+int64_t RepeatedPowMod(int64_t base, int64_t exponent, int64_t mod) {
+  if (exponent == 0)
+    return 1;
+  else if (exponent % 2 == 0) {
+    int64_t root = RepeatedPowMod(base, exponent / 2, mod);
+    return (root * root) % mod;
+  } else {
+    return (base * RepeatedPowMod(base, exponent - 1, mod)) % mod;
+  }
+}
+
 template<int64_t mod>
 class ModInt{
-  int64_t _value;
+  int64_t value_;
 
 public:
-  constexpr explicit ModInt(const int64_t x = 0): _value(x % mod){
+  explicit ModInt(const int64_t x = 0): value_(x % mod){
   };
 
-  constexpr ModInt& operator+=(const ModInt& another){
-    _value += another._value;
-    _value = EuclidMod(_value, mod);
+  ModInt& operator=(const ModInt& another){
+    value_=another.value_;
     return *this;
   }
 
-  constexpr ModInt& operator-=(const ModInt& another){
-    _value -= another._value;
-    _value = EuclidMod(_value, mod);
+  ModInt& operator^=(const ModInt& another){
+    value_=RepeatedPowMod(value_,another.value_,mod);
     return *this;
   }
 
-  constexpr ModInt& operator*=(const ModInt& another){
-    _value *= another._value;
-    _value = EuclidMod(_value, mod);
+  ModInt& operator+=(const ModInt& another){
+    value_ += another.value_;
+    value_ = EuclidMod(value_, mod);
     return *this;
   }
 
-  constexpr ModInt& operator/=(const ModInt& another){
-    _value = _value * ModInv(another._value, mod);
-    _value = EuclidMod(_value, mod);
+  ModInt& operator-=(const ModInt& another){
+    value_ -= another.value_;
+    value_ = EuclidMod(value_, mod);
     return *this;
   }
 
-  constexpr ModInt& operator++(){
-    _value += ModInt(1);
+  ModInt& operator*=(const ModInt& another){
+    value_ *= another.value_;
+    value_ = EuclidMod(value_, mod);
     return *this;
   }
 
-  constexpr ModInt operator++(int){
+  ModInt& operator/=(const ModInt& another){
+    value_ = value_ * ModInv(another.value_, mod);
+    value_ = EuclidMod(value_, mod);
+    return *this;
+  }
+
+  ModInt& operator++(){
+    value_ += ModInt(1);
+    return *this;
+  }
+
+  ModInt operator++(int){
     ModInt tmp = *this;
     ++tmp;
     return tmp;
   }
 
+  ModInt& operator--(){
+    value_-=ModInt(1);
+    return *this;
+  }
+
+  ModInt operator--(int){
+    ModInt tmp=*this;
+    --tmp;
+    return tmp;
+  }
+
+
+
   int64_t GetValue() const{
-    return _value;
+    return value_;
   }
 
 };
 
 template<int64_t mod>
-constexpr ModInt<mod>
+ModInt<mod>
 operator+(const ModInt<mod>& left, const ModInt<mod>& right){
   return ModInt<mod>(left) += right;
 }
 
 template<int64_t mod>
-constexpr ModInt<mod>
+ModInt<mod>
 operator-(const ModInt<mod>& left, const ModInt<mod>& right){
   return ModInt<mod>(left) -= right;
 }
 
 template<int64_t mod>
-constexpr ModInt<mod>
+ModInt<mod>
 operator/(const ModInt<mod>& left, const ModInt<mod>& right){
   return ModInt<mod>(left) /= right;
 }
 
 template<int64_t mod>
-constexpr ModInt<mod>
+ModInt<mod>
 operator*(const ModInt<mod>& left, const ModInt<mod>& right){
   return ModInt<mod>(left) *= right;
+}
+
+template<int64_t mod>
+ModInt<mod>
+operator^(const ModInt<mod>& left, const ModInt<mod>& right){
+  return ModInt<mod>(left) ^= right;
 }
 
 template<int64_t mod>
@@ -116,6 +157,16 @@ std::ostream& operator<<(std::ostream& stream, const ModInt<mod>& mod_int){
   stream << mod_int.GetValue();
   return stream;
 }
+
+template<int64_t mod>
+std::istream& operator>>(std::istream& stream, ModInt<mod>& mod_int){
+  int64_t v;
+  stream>>v;
+  mod_int=ModInt<mod>(v);
+  return stream;
+}
+
+
 
 class RandomIntNumber {
   std::mt19937_64 mt_maker_;
@@ -137,18 +188,6 @@ public:
     return Make();
   }
 };
-
-// return base_^exponent (MOD. mod).
-int64_t RepeatedPowMod(int64_t base, int64_t exponent, int64_t mod) {
-  if (exponent == 0)
-    return 1;
-  else if (exponent % 2 == 0) {
-    int64_t root = RepeatedPowMod(base, exponent / 2, mod);
-    return (root * root) % mod;
-  } else {
-    return (base * RepeatedPowMod(base, exponent - 1, mod)) % mod;
-  }
-}
 
 class RollingHash{
   static const int64_t MOD_=1000000007;
@@ -212,31 +251,5 @@ bool IsContaining(std::string a,std::string b){
   return false;
 }
 
-int main(void){
-  cout << std::fixed << std::setprecision(10);
-  std::ios::sync_with_stdio(false);
-  cin.tie(0);
-  std::string t,p;
-  cin>>t>>p;
-  // cerr<<"read"<<endl;
-  RollingHash hash_t(t);
-  // cerr<<"hashed"<<endl;
-  RollingHash hash_p(p,hash_t.GetBase());
-  // cerr<<"hashed"<<endl;
-  for(int front=0;front+p.size()-1<t.size();front++){
-    int back=front+p.size()-1;
-    if(hash_t.GetHash(front,back)==hash_p.GetHash(0,p.size()-1)){
-      printf("%d\n",front);
-    }
-  }
-  return 0;
-}
 
-// int main(void){
-//   std::string s("aafafaa");
-//   RollingHash hash(s);
-//   for(int i=0;i<=5;i++){
-//     cout<<hash.GetHash(i,i+1)<<endl;
-//   }
-// }
 
