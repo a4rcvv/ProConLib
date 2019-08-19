@@ -12,3 +12,5 @@ rand.dSYM/Contents/Info.plist
 rand.dSYM/Contents/Resources/DWARF/rand
 timer.dSYM/Contents/Info.plist
 timer.dSYM/Contents/Resources/DWARF/timer
+/.idea
+CMakeLists.txt
