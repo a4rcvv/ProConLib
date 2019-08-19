@@ -1,7 +1,6 @@
 .vscode/*
 .DS_Store
 math.dSYM
-math
 union_find
 union_find.dSYM
 .history
