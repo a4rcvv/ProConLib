@@ -1,10 +1,6 @@
 #include<algorithm>
-#include<iostream>
 
-using std::cout;
-using std::endl;
-
-constexpr int64_t EuclidMod(int64_t v, int64_t m){
+int64_t EuclidMod(int64_t v, int64_t m){
   if(0 <= v && v < m){
     return v;
   }else if(-m <= v && v < 0){
@@ -18,7 +14,7 @@ constexpr int64_t EuclidMod(int64_t v, int64_t m){
   }
 }
 
-constexpr int64_t ModInv(int64_t a, int64_t m){
+int64_t ModInv(int64_t a, int64_t m){
   int64_t b = m, u = 1, v = 0;
   while(b){
     int64_t t = a / b;
@@ -31,77 +27,118 @@ constexpr int64_t ModInv(int64_t a, int64_t m){
   return u;
 }
 
+// return base^exponent (MOD. mod).
+int64_t RepeatedPowMod(int64_t base, int64_t exponent, int64_t mod) {
+  if (exponent == 0)
+    return 1;
+  else if (exponent % 2 == 0) {
+    int64_t root = RepeatedPowMod(base, exponent / 2, mod);
+    return (root * root) % mod;
+  } else {
+    return (base * RepeatedPowMod(base, exponent - 1, mod)) % mod;
+  }
+}
+
 template<int64_t mod>
 class ModInt{
-  int64_t _value;
+  int64_t value_;
 
 public:
-  constexpr explicit ModInt(const int64_t x = 0): _value(x % mod){
+  explicit ModInt(const int64_t x = 0): value_(x % mod){
   };
 
-  constexpr ModInt& operator+=(const ModInt& another){
-    _value += another._value;
-    _value = EuclidMod(_value, mod);
+  ModInt& operator=(const ModInt& another){
+    value_=another.value_;
     return *this;
   }
 
-  constexpr ModInt& operator-=(const ModInt& another){
-    _value -= another._value;
-    _value = EuclidMod(_value, mod);
+  ModInt& operator^=(const ModInt& another){
+    value_=RepeatedPowMod(value_,another.value_,mod);
     return *this;
   }
 
-  constexpr ModInt& operator*=(const ModInt& another){
-    _value *= another._value;
-    _value = EuclidMod(_value, mod);
+  ModInt& operator+=(const ModInt& another){
+    value_ += another.value_;
+    value_ = EuclidMod(value_, mod);
     return *this;
   }
 
-  constexpr ModInt& operator/=(const ModInt& another){
-    _value = _value * ModInv(another._value, mod);
-    _value = EuclidMod(_value, mod);
+  ModInt& operator-=(const ModInt& another){
+    value_ -= another.value_;
+    value_ = EuclidMod(value_, mod);
     return *this;
   }
 
-  constexpr ModInt& operator++(){
-    _value += ModInt(1);
+  ModInt& operator*=(const ModInt& another){
+    value_ *= another.value_;
+    value_ = EuclidMod(value_, mod);
     return *this;
   }
 
-  constexpr ModInt operator++(int){
+  ModInt& operator/=(const ModInt& another){
+    value_ = value_ * ModInv(another.value_, mod);
+    value_ = EuclidMod(value_, mod);
+    return *this;
+  }
+
+  ModInt& operator++(){
+    value_ += ModInt(1);
+    return *this;
+  }
+
+  ModInt operator++(int){
     ModInt tmp = *this;
     ++tmp;
     return tmp;
   }
 
+  ModInt& operator--(){
+    value_-=ModInt(1);
+    return *this;
+  }
+
+  ModInt operator--(int){
+    ModInt tmp=*this;
+    --tmp;
+    return tmp;
+  }
+
+
+
   int64_t GetValue() const{
-    return _value;
+    return value_;
   }
 
 };
 
 template<int64_t mod>
-constexpr ModInt<mod>
+ModInt<mod>
 operator+(const ModInt<mod>& left, const ModInt<mod>& right){
   return ModInt<mod>(left) += right;
 }
 
 template<int64_t mod>
-constexpr ModInt<mod>
+ModInt<mod>
 operator-(const ModInt<mod>& left, const ModInt<mod>& right){
   return ModInt<mod>(left) -= right;
 }
 
 template<int64_t mod>
-constexpr ModInt<mod>
+ModInt<mod>
 operator/(const ModInt<mod>& left, const ModInt<mod>& right){
   return ModInt<mod>(left) /= right;
 }
 
 template<int64_t mod>
-constexpr ModInt<mod>
+ModInt<mod>
 operator*(const ModInt<mod>& left, const ModInt<mod>& right){
   return ModInt<mod>(left) *= right;
+}
+
+template<int64_t mod>
+ModInt<mod>
+operator^(const ModInt<mod>& left, const ModInt<mod>& right){
+  return ModInt<mod>(left) ^= right;
 }
 
 template<int64_t mod>
@@ -110,5 +147,24 @@ std::ostream& operator<<(std::ostream& stream, const ModInt<mod>& mod_int){
   return stream;
 }
 
+template<int64_t mod>
+std::istream& operator>>(std::istream& stream, ModInt<mod>& mod_int){
+  int64_t v;
+  stream>>v;
+  mod_int=ModInt<mod>(v);
+  return stream;
+}
 
+// // for verifying
+// int main(void) {
+//
+//
+//   const int64_t MOD =  1000000000+ 7;
+//   ModInt<MOD> b, e;
+//   cin >> b >> e;
+//   cout<<(b^e)<<endl;
+//
+//
+//   return 0;
+// }
 
