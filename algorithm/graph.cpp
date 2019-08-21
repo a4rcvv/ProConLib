@@ -16,8 +16,7 @@ class Graph{
 
 private:
 
-  /// \brief 頂点数
-  const int NODE_SIZE_;
+
 
 
 
@@ -26,6 +25,11 @@ private:
 
 public:
 
+  /// \brief 頂点数
+  const int NODE_SIZE_;
+
+  /// \brief コンストラクタ
+  /// \param node_size 頂点数
   explicit Graph(const int node_size):NODE_SIZE_(node_size),adjacent_list_(node_size){}
 
   /// \brief 有向グラフの辺を生やす
@@ -48,7 +52,7 @@ public:
   /// \brief ある頂点の隣接リストを取得
   /// \param node_num 頂点の番号
   /// \return 隣接リスト
-  std::vector<Edge<CostType>> GetAdjacentList(int node_num){
+  std::vector<Edge<CostType>> GetAdjacentList(int node_num)const{
     return adjacent_list_[node_num];
   }
 };
@@ -61,6 +65,36 @@ public:
 /// \return グラフの各頂点への最短経路を示す配列(到達不可能なときはINF)，負の辺が入っていた場合はsize0の配列
 template <typename CostType>
 std::vector<CostType> Dijkstra(const Graph<CostType>& graph, const int start_node, CostType INF){
+  struct Info{
+    int node;
+    CostType cost;
+    Info(int n,CostType c):node(n),cost(c){};
+    bool operator>(const Info& another)const{
+      return cost>another.cost;
+    }
+  };
+
+  std::vector<CostType> min_cost(graph.NODE_SIZE_);
+  std::priority_queue<Info,std::vector<Info>,std::greater<Info>> pq;
+  for(int i=0;i<min_cost.size();i++){
+    min_cost[i]=(i==start_node)?0:INF;
+  }
+  pq.push(Info(start_node,0));
+
+  while(!pq.empty()){
+    Info current_info=pq.top();
+    pq.pop();
+    if(min_cost[current_info.node]!=current_info.cost) continue;
+    const std::vector<Edge<CostType>>& adjacency_list=graph.GetAdjacentList(current_info.node);
+    for(auto e:adjacency_list){
+      if(min_cost[e.to]>min_cost[current_info.node]+e.cost){
+        min_cost[e.to]=min_cost[current_info.node]+e.cost;
+        pq.push(Info(e.to,min_cost[e.to]));
+      }
+    }
+  }
+
+  return min_cost;
 
 }
 
@@ -69,10 +103,79 @@ std::vector<CostType> Dijkstra(const Graph<CostType>& graph, const int start_nod
 /// \param graph グラフ
 /// \param start_node どの頂点から最短経路を求めるか
 /// \param INF CostType型で十分大きい値
-/// \return グラフの各頂点への最短経路を示す配列(到達不可能なときはINF)，負の閉路が入っていた場合はsize0の配列
+/// \return グラフの各頂点への最短経路を示す配列(到達不可能なときはINF)，負の閉路がある場合はsize0の配列
 template <typename CostType>
 std::vector<CostType> BellmanFord(const Graph<CostType>& graph, const int start_node, CostType INF){
+  std::vector<CostType> min_cost(graph.NODE_SIZE_);
+  for(int i=0;i<min_cost.size();i++){
+    min_cost[i]=(i==start_node)?0:INF;
+  }
 
+  for(int loop=0;loop<graph.NODE_SIZE_;loop++){
+    for(int from=0;from<graph.NODE_SIZE_;from++){
+      if(min_cost[from]==INF) continue;
+      std::vector<Edge<CostType>> adjacent_list=graph.GetAdjacentList(from);
+      for(auto e:adjacent_list){
+        CostType next_cost=min_cost[from]+e.cost;
+        if(next_cost<min_cost[e.to]){
+          if(loop==graph.NODE_SIZE_-1){
+            return std::vector<CostType>(0);
+          }else{
+            min_cost[e.to]=next_cost;
+          }
+        }
+      }
+    }
+  }
+
+  return min_cost;
+}
+
+/// \brief ワーシャルフロイド法により，全点対の最小コストを求める
+/// \tparam CostType 辺のコストの型
+/// \param graph グラフ
+/// \param INF CostType型で十分大きい値
+/// \return hoge[from][to]=from→toの最小コスト(到達できないときはINF)，
+///         負の閉路がある場合は0行の二次元配列みたいなvector
+template <typename CostType>
+std::vector<std::vector<CostType>> WarshallFloyd(const Graph<CostType>& graph,const CostType INF){
+  std::vector<std::vector<CostType>> min_cost;
+  for(int r=0;r<graph.NODE_SIZE_;r++){
+    std::vector<CostType> rowvec;
+    for(int c=0;c<graph.NODE_SIZE_;c++){
+      rowvec.push_back((r==c)?0:INF);
+    }
+    min_cost.push_back(rowvec);
+  }
+
+  for(int from=0;from<graph.NODE_SIZE_;from++){
+    for(auto e:graph.GetAdjacentList(from)){
+      min_cost[from][e.to]=e.cost;
+    }
+  }
+
+  for(int k=0;k<graph.NODE_SIZE_;k++){
+    for(int i=0;i<graph.NODE_SIZE_;i++){
+      for(int j=0;j<graph.NODE_SIZE_;j++){
+        if(min_cost[i][k]==INF||min_cost[k][j]==INF) continue;
+        min_cost[i][j]=std::min(min_cost[i][j],min_cost[i][k]+min_cost[k][j]);
+      }
+    }
+  }
+
+
+    for(int i=0;i<graph.NODE_SIZE_;i++){
+
+
+        if(min_cost[i][i]<0){
+          std::vector<std::vector<CostType>> result(0);
+          return result;
+        }
+
+    }
+
+
+  return min_cost;
 }
 
 
@@ -147,8 +250,7 @@ void DFS(const Graph<CostType>& graph,const State& start_state){
     //current_stateに対してなにかする
 
     std::vector<Edge<CostType>> adjacent_list=graph.GetAdjacentList(current_state.current_node);
-    for(auto e:adjacent_list
-    ){
+    for(auto e:adjacent_list){
 
       int next_node=e.to;
 
@@ -163,12 +265,4 @@ void DFS(const Graph<CostType>& graph,const State& start_state){
 
     }
   }
-}
-
-
-
-int main(void){
-
-
-  return 0;
 }
