@@ -82,24 +82,28 @@ public:
   }
 
   ModInt& operator++(){
-    value_ += ModInt(1);
+    value_ += 1;
+    value_=EuclidMod(value_,mod);
     return *this;
   }
 
   ModInt operator++(int){
     ModInt tmp = *this;
-    ++tmp;
+    this->value_+=1;
+    this->value_=EuclidMod(this->value_,mod);
     return tmp;
   }
 
   ModInt& operator--(){
-    value_-=ModInt(1);
+    value_ -= 1;
+    value_=EuclidMod(value_,mod);
     return *this;
   }
 
   ModInt operator--(int){
     ModInt tmp=*this;
-    --tmp;
+    this->value_-=1;
+    this->value_=EuclidMod(this->value_,mod);
     return tmp;
   }
 
@@ -147,22 +151,19 @@ std::ostream& operator<<(std::ostream& stream, const ModInt<mod>& mod_int){
   return stream;
 }
 
-template<int64_t mod>
-std::istream& operator>>(std::istream& stream, ModInt<mod>& mod_int){
-  int64_t v;
-  stream>>v;
-  mod_int=ModInt<mod>(v);
-  return stream;
-}
 
 // // for verifying
 // int main(void) {
 //
 //
 //   const int64_t MOD =  1000000000+ 7;
-//   ModInt<MOD> b, e;
-//   cin >> b >> e;
-//   cout<<(b^e)<<endl;
+//   ModInt<MOD> b(MOD-1);
+//   std::cout<<b<<std::endl;
+//   b--;
+//   std::cout<<b<<std::endl;
+//   b--;
+//   std::cout<<b<<std::endl;
+//
 //
 //
 //   return 0;
