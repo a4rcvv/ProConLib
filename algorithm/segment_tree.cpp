@@ -65,16 +65,16 @@ private:
     return parent * 2 + 2;
   }
 
-  Monoid GetRangeOperation(int query_l, int query_r, int node, int l, int r){
+  Monoid GetResult(int query_l, int query_r, int node, int l, int r){
     if(r <= query_l || query_r <= l){
       return identity_;
     }else if(query_l <= l && r <= query_r){
       return tree_[node];
     }else{
-      Monoid vl = GetRangeOperation(query_l, query_r, LeftChild(node), l,
-                                    (l + r) / 2);
-      Monoid vr = GetRangeOperation(query_l, query_r, RightChild(node),
-                                    (l + r) / 2, r);
+      Monoid vl = GetResult(query_l, query_r, LeftChild(node), l,
+                            (l + r) / 2);
+      Monoid vr = GetResult(query_l, query_r, RightChild(node),
+                            (l + r) / 2, r);
       return InternalOperate(vl, vr);
     }
 
@@ -85,15 +85,20 @@ public:
   /// \brief construct the segment tree.
   /// \param identity the element e s.t. a*e = e*a = a  (単位元)
   /// \param v tree initializer
-  SegmentTree(const Monoid& identity, const std::vector<Monoid> v): identity_(
+  //FIXME: コンストラクタ中で仮想関数を使わないようにする
+  SegmentTree(const Monoid& identity, const int size): identity_(
       identity){
-    int sz = v.size();
+    int sz = size;
     range_ = 1;
     while(range_ < sz){
       range_ *= 2;
     }
     tree_.resize(2 * range_ - 1, identity);
-    for(int i = 0; i < sz; i++){
+
+  }
+
+  void Init(const std::vector<Monoid>& v){
+    for(int i = 0; i < v.size(); i++){
       tree_[i + range_ - 1] = v[i];
     }
     for(int i = range_ - 2; i >= 0; i--){
@@ -120,20 +125,20 @@ public:
   /// \param r 範囲右端(rを含まない)
   /// \return result
 
-  Monoid GetRangeOperation(int l, int r){
-    return GetRangeOperation(l, r, 0, 0, range_);
+  Monoid GetResult(int l, int r){
+    return GetResult(l, r, 0, 0, range_);
   }
 };
 
 // example of implementation
 
-// class RMQTree:public SegmentTree<int64_t>{
-//   int64_t Operate(const int64_t& a, const int64_t& b) override {
-//     return std::min(a,b);
-//   }
-// public:
-//   RMQTree(const int64_t& identity, const std::vector<int64_t> v):SegmentTree(identity,v){}
-// };
+class RMQTree:public SegmentTree<int64_t>{
+  int64_t Operate(const int64_t& a, const int64_t& b) override {
+    return std::min(a,b);
+  }
+public:
+  RMQTree(const int64_t& identity, const int n):SegmentTree(identity,n){}
+};
 
 
 
@@ -182,7 +187,7 @@ public:
 //   double min=1,max=1;
 //   for(auto i:info){
 //     tree.SetValue(i.p,std::make_pair(i.a,i.b));
-//     pair result=tree.GetRangeOperation(0,n_compressed);
+//     pair result=tree.GetResult(0,n_compressed);
 //     max=std::max(max,result.first+result.second);
 //     min=std::min(min,result.first+result.second);
 //   }
@@ -196,32 +201,33 @@ public:
 //   return 0;
 // }
 
-//example of using(RMQ)
+// example of using(RMQ)
 
-// int main(void){
-//   cout << std::fixed << std::setprecision(10);
-//   cin.tie(0);
-//   std::ios::sync_with_stdio(false);
-//
-//   int n, q;
-//   cin >> n >> q;
-//   const int64_t        INF = INT32_MAX;
-//   RMQTree tree(INF, std::vector<int64_t>(n, INF));
-//   for(int              i   = 0; i < q; i++){
-//     int command, x, y;
-//     cin >> command >> x >> y;
-//
-//     switch(command){
-//       case 0:tree.SetValue(x, y);
-//         // tree.OutputTree();
-//         break;
-//       case 1:cout << tree.GetRangeOperation(x, y + 1) << endl;
-//         break;
-//     }
-//   }
-//
-//   return 0;
-// }
+int main(void){
+  cout << std::fixed << std::setprecision(10);
+  cin.tie(0);
+  std::ios::sync_with_stdio(false);
+
+  int n, q;
+  cin >> n >> q;
+  const int64_t        INF = INT32_MAX;
+  RMQTree tree(INF, n);
+  tree.Init(std::vector<int64_t>(n,INT32_MAX));
+  for(int              i   = 0; i < q; i++){
+    int command, x, y;
+    cin >> command >> x >> y;
+
+    switch(command){
+      case 0:tree.SetValue(x, y);
+        // tree.OutputTree();
+        break;
+      case 1:cout << tree.GetResult(x, y + 1) << endl;
+        break;
+    }
+  }
+
+  return 0;
+}
 
 
 
