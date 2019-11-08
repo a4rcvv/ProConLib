@@ -15,7 +15,9 @@ using std::endl;
 
 
 
-//see also: http://tsutaj.hatenablog.com/entry/2017/03/29/204841
+//参考: http://tsutaj.hatenablog.com/entry/2017/03/30/224339
+//http://beet-aizu.hatenablog.com/entry/2017/12/01/225955
+
 
 template<typename VM,typename OM>
 class LazySegmentTree{
