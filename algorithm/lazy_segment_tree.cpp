@@ -103,7 +103,6 @@ public:
 
   /// \brief construct the segment tree.
   /// \param identity the element e s.t. a*e = e*a = a  (単位元)
-  //FIXME: コンストラクタ中で仮想関数を使わないようにする
   LazySegmentTree(const VM& value_identity, const OM& operator_identity,
       int size): value_identity_(
       value_identity),operator_identity_(operator_identity){

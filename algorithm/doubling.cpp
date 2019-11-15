@@ -4,6 +4,7 @@
 //参考: http://satanic0258.hatenablog.com/entry/2017/02/23/222647
 
 //FIXME: NOT VERIFIED!
+//なんかAtCoderのジャッジがおかしい気がする
 
 template<typename T>
 class DoublingMgr{
