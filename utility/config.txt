@@ -1,0 +1,4 @@
+main="/home/arc/program/atcoder/procon-tester-tester/cmake-build-debug/main"
+greedy="/home/arc/program/atcoder/procon-tester-tester/cmake-build-debug/greedy"
+generator="/home/arc/program/atcoder/procon-tester-tester/cmake-build-debug/generator"
+testcase_path="./test.txt"
