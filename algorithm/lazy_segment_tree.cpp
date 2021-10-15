@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cstdint>
 #include <cstdio>
 #include <deque>
 #include <iomanip>
@@ -15,171 +16,245 @@ using std::endl;
 //参考: http://tsutaj.hatenablog.com/entry/2017/03/30/224339
 // http://beet-aizu.hatenablog.com/entry/2017/12/01/225955
 
-template <typename VM, typename OM> class LazySegmentTree {
+/**
+ * @brief 遅延伝搬セグメント木の抽象クラス
+ *
+ * @tparam V 区間取得の値の型
+ * @tparam O 操作を表す値の型
+ */
+template <typename V, typename O> class LazySegmentTree {
 protected:
   int range_;
-  VM value_identity_;
-  OM operator_identity_;
-  std::vector<VM> value_tree_;
-  std::vector<OM> lazy_tree_;
+  V value_identity_;
+  O operator_identity_;
+  std::vector<V> value;
+  std::vector<O> lazy;
 
-  // 子ノード2つをマージして親ノードの値を求める
-  virtual VM MergeValue(const VM &a, const VM &b) = 0;
-  // targetとeffectorをマージして新たなOperatorを求める
-  virtual OM MergeOperator(const OM &target, const OM &effector) = 0;
-  // valにoplを作用させた結果を返す
-  virtual VM Operate(const VM &val, const OM &opl) = 0;
-  // 長さnの遅延ノードに格納する値を計算
-  virtual OM GetOperator(const OM &opl, const int n) = 0;
+  /**
+   * @brief 子ノード2つをマージして親ノードのValueを求める
+   *
+   * @param a 子ノードの値
+   * @param b 子ノードの値
+   * @return V 親ノードの値
+   */
+  virtual V mergeValue(const V &a, const V &b) = 0;
+  /**
+   * @brief targetにeffectorの操作を加えて，新たなOperatorを求める
+   *
+   * @param target 既存のOperator
+   * @param effector 新たに加わるOperator
+   * @return O effectorを反映させたあとのOperator
+   */
+  virtual O mergeOperator(const O &target, const O &effector) = 0;
 
-  VM InternalMerge(const VM &a, const VM &b) {
+  /**
+   * @brief valにoplを作用させた結果を返す
+   *
+   * @param val 値
+   * @param opl 演算
+   * @param n 区間長
+   * @return V 演算が作用されたあとの値
+   */
+  virtual V operate(const V &val, const O &opl, int n) = 0;
+
+  V internalMerge(const V &a, const V &b) {
     if (a == value_identity_) {
       return b;
     } else if (b == value_identity_) {
       return a;
     } else {
-      return MergeValue(a, b);
+      return mergeValue(a, b);
     }
   }
 
-  int Parent(const int child) const { return (child - 1) / 2; }
+  int parent(const int child) const { return (child - 1) / 2; }
 
-  int LeftChild(const int parent) const { return parent * 2 + 1; }
+  int leftChild(const int parent) const { return parent * 2 + 1; }
 
-  int RightChild(const int parent) const { return parent * 2 + 2; }
+  int rightChild(const int parent) const { return parent * 2 + 2; }
 
-  void Propagate(int node, int len) {
-    if (lazy_tree_[node] != operator_identity_) {
+  /**
+   * @brief nodeの遅延評価を実行し，子ノードに伝播させる
+   *
+   * @param node ノード番号
+   * @param len そのノードが管理する区間の長さ
+   */
+  void propagate(int node, int len) {
+    if (lazy[node] != operator_identity_) {
       if (node * 2 + 2 < range_ * 2) {
-        lazy_tree_[LeftChild(node)] =
-            MergeOperator(lazy_tree_[LeftChild(node)], lazy_tree_[node]);
-        lazy_tree_[RightChild(node)] =
-            MergeOperator(lazy_tree_[RightChild(node)], lazy_tree_[node]);
+        lazy[leftChild(node)] =
+            mergeOperator(lazy[leftChild(node)], lazy[node]);
+        lazy[rightChild(node)] =
+            mergeOperator(lazy[rightChild(node)], lazy[node]);
       }
 
-      value_tree_[node] =
-          Operate(value_tree_[node], GetOperator(lazy_tree_[node], len));
-      lazy_tree_[node] = operator_identity_;
+      value[node] = operate(value[node], lazy[node], len);
+      lazy[node] = operator_identity_;
     }
   }
 
-  VM GetRangeOperation(int query_l, int query_r, int node, int l, int r) {
-    Propagate(node, r - l);
+  /**
+   * @brief 範囲取得クエリを実行
+   *
+   * @param query_l 取得区間左端
+   * @param query_r 取得区間右端(半開区間に注意)
+   * @param node 今見ているノード
+   * @param l 対象のノードの区間左端
+   * @param r 対象のノードの区間右端(半開区間に注意)
+   * @return V 範囲取得の結果
+   */
+  V getRange(int query_l, int query_r, int node, int l, int r) {
+    propagate(node, r - l);
     if (r <= query_l || query_r <= l) {
       return value_identity_;
     } else if (query_l <= l && r <= query_r) {
-      return value_tree_[node];
+      return value[node];
     } else {
-      VM vl =
-          GetRangeOperation(query_l, query_r, LeftChild(node), l, (l + r) / 2);
-      VM vr =
-          GetRangeOperation(query_l, query_r, RightChild(node), (l + r) / 2, r);
-      return InternalMerge(vl, vr);
+      V vl = getRange(query_l, query_r, leftChild(node), l, (l + r) / 2);
+      V vr = getRange(query_l, query_r, rightChild(node), (l + r) / 2, r);
+      return internalMerge(vl, vr);
     }
   }
 
-  VM Update(int a, int b, OM opr, int node, int l, int r) {
-    Propagate(node, r - l);
-    if (r <= a || b <= l)
-      return value_tree_[node];
-    if (a <= l && r <= b) {
-      lazy_tree_[node] = MergeOperator(lazy_tree_[node], opr);
-      Propagate(node, r - l);
-      return Operate(value_tree_[node], GetOperator(lazy_tree_[node], r - l));
+  /**
+   * @brief 範囲演算を実行
+   *
+   * @param a 演算区間左端
+   * @param b 演算区間右端(半開区間に注意)
+   * @param opr 演算
+   * @param node 見ているノード
+   * @param l 対象のノードの区間左端
+   * @param r 対象のノードの区間右端(半開区間に注意)
+   * @return V 範囲演算の結果
+   */
+  V update(int a, int b, O opr, int node, int l, int r) {
+    propagate(node, r - l);
+    if (r <= a || b <= l) // [a,b)が[l,r)に全く含まれていない場合
+      return value[node];
+    if (a <= l && r <= b) { // a,b)が[l,r)に完全に含まれている場合
+      lazy[node] = mergeOperator(lazy[node], opr);
+      propagate(node, r - l);
+      return operate(value[node], lazy[node], r - l);
     } else {
-      Update(a, b, opr, LeftChild(node), l, (l + r) / 2);
-      Update(a, b, opr, RightChild(node), (l + r) / 2, r);
-      value_tree_[node] = InternalMerge(value_tree_[LeftChild(node)],
-                                        value_tree_[RightChild(node)]);
-      return value_tree_[node];
+      update(a, b, opr, leftChild(node), l, (l + r) / 2);
+      update(a, b, opr, rightChild(node), (l + r) / 2, r);
+      value[node] =
+          internalMerge(value[leftChild(node)], value[rightChild(node)]);
+      return value[node];
     }
   }
 
 public:
-  /// \brief construct the segment tree.
-  /// \param identity the element e s.t. a*e = e*a = a  (単位元)
-  LazySegmentTree(const VM &value_identity, const OM &operator_identity,
-                  int size)
+  /**
+   * @brief vでセグ木を初期化する
+   *
+   * @param v 初期状態の値の配列
+   */
+  void init(const std::vector<V> &v) {
+    for (int i = 0; i < v.size(); i++) {
+      value[i + range_ - 1] = v[i];
+    }
+    for (int i = range_ - 2; i >= 0; i--) {
+      value[i] = internalMerge(value[leftChild(i)], value[rightChild(i)]);
+    }
+  }
+
+  /**
+   * @brief [l, r) に対して演算を行う
+   *
+   * @param l 半開区間左端
+   * @param r 半開区間右端
+   * @param opr 演算の値
+   */
+  void update(int l, int r, O opr) { update(l, r, opr, 0, 0, range_); }
+
+  /**
+   * @brief [l, r)に対して範囲取得する
+   *
+   * @param l 半開区間左端
+   * @param r 半開区間右端
+   * @return V 範囲取得の結果
+   */
+
+  V get(int l, int r) { return getRange(l, r, 0, 0, range_); }
+
+  /**
+   * @brief Construct a new Lazy Segment Tree object
+   *
+   * @param value_identity 値の単位元
+   * @param operator_identity 演算の単位元
+   * @param size セグ木の大きさ
+   */
+  LazySegmentTree(const V &value_identity, const O &operator_identity, int size)
       : value_identity_(value_identity), operator_identity_(operator_identity) {
     int sz = size;
     range_ = 1;
     while (range_ < sz) {
       range_ *= 2;
     }
-    value_tree_.resize(2 * range_ - 1, value_identity);
-    lazy_tree_.resize(2 * range_ - 1, operator_identity);
+    value.resize(2 * range_ - 1, value_identity);
+    lazy.resize(2 * range_ - 1, operator_identity);
   }
 
-  void Init(const std::vector<VM> &v) {
-    for (int i = 0; i < v.size(); i++) {
-      value_tree_[i + range_ - 1] = v[i];
-    }
-    for (int i = range_ - 2; i >= 0; i--) {
-      value_tree_[i] =
-          InternalMerge(value_tree_[LeftChild(i)], value_tree_[RightChild(i)]);
-    }
+  /**
+   * @brief Construct a new Lazy Segment Tree object
+   *
+   * @param value_identity 値の単位元
+   * @param operator_identity 演算の単位元
+   * @param v 値の初期値
+   */
+  LazySegmentTree(const V &value_identity, const O &operator_identity,
+                  const std::vector<V> &v)
+      : LazySegmentTree(value_identity, operator_identity, v.size()) {
+    init(v);
   }
-
-  void Update(int a, int b, OM opr) { Update(a, b, opr, 0, 0, range_); }
-
-  /// \brief [l,r)に対して演算をした結果を返す
-  /// \param l 範囲左端(lを含む)
-  /// \param r 範囲右端(rを含まない)
-  /// \return result
-
-  VM GetResult(int l, int r) { return GetRangeOperation(l, r, 0, 0, range_); }
 };
 
 // verify
 // https://judge.u-aizu.ac.jp/onlinejudge/description.jsp?id=DSL_2_I
-// 区間update、区間sum取得に対応
+// 区間変更、区間sum取得に対応
 //
-// class RSQTree:public LazySegmentTree<int64_t,int64_t>{
-// protected:
+class RSQTree : public LazySegmentTree<int64_t, int64_t> {
+protected:
+  int64_t mergeValue(const int64_t &a, const int64_t &b) override {
+    return a + b;
+  }
+  int64_t mergeOperator(const int64_t &target,
+                        const int64_t &effector) override {
+    if (effector == operator_identity_) {
+      return target;
+    } else {
+      return effector;
+    }
+  }
+  int64_t operate(const int64_t &val, const int64_t &opl, int n) override {
+    if (opl == operator_identity_) {
+      return val;
+    } else {
+      return opl*n;
+    }
+  }
 
-//   int64_t MergeValue(const int64_t& a, const int64_t& b)override {
-//     return a+b;
-//   }
-//   int64_t MergeOperator(const int64_t& target,const int64_t&
-//   effector)override {
-//     if(effector==operator_identity_){
-//       return target;
-//     }else{
-//       return effector;
-//     }
-//   }
-//   int64_t Operate(const int64_t& val, const int64_t& opl)override {
-//     if(opl==operator_identity_){
-//       return val;
-//     }else{
-//       return opl;
-//     }
-//   }
-//   int64_t GetOperator(const int64_t& opl, const int n)override {
-//     return opl*(int64_t)n;
-//   }
+public:
+  RSQTree(int64_t n) : LazySegmentTree(0, INT64_MAX, n) {}
+};
 
-// public:
-//   RSQTree(int64_t n):LazySegmentTree(0,INT32_MAX,n){}
-
-// };
-
-// int main(void){
-//   int64_t n,q;
-//   cin>>n>>q;
-//   RSQTree tree(n+1);
-//   tree.Init(std::vector<int64_t>(n,0));
-//   for(int64_t i=0;i<q;i++){
-//     int64_t m;
-//     cin>>m;
-//     if(m==0){
-//       int64_t s,t,x;
-//       cin>>s>>t>>x;
-//       tree.Update(s,t+1,x);
-//     }else{
-//       int64_t s,t;
-//       cin>>s>>t;
-//       cout<< tree.GetResult(s, t + 1)<<endl;
-//     }
-//   }
-// }
+int main(void) {
+  int64_t n, q;
+  cin >> n >> q;
+  RSQTree tree(n + 1);
+  tree.init(std::vector<int64_t>(n, 0));
+  for (int64_t i = 0; i < q; i++) {
+    int64_t m;
+    cin >> m;
+    if (m == 0) {
+      int64_t s, t, x;
+      cin >> s >> t >> x;
+      tree.update(s, t + 1, x);
+    } else {
+      int64_t s, t;
+      cin >> s >> t;
+      cout << tree.get(s, t + 1) << endl;
+    }
+  }
+}
