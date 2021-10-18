@@ -103,7 +103,7 @@ public:
     getLeftRotated(direction[5]);
   }
   vector<pair<int, int>> get() {
-    
+
     vector<pair<int, int>> res(6);
     for (int i = 0; i < 6; i++) {
       res[i] = {face[i], direction[i]};
@@ -116,7 +116,9 @@ public:
    *
    * @param initialFace 面の情報。{u,n,d,s,l,r}
    * @param initialDir 面の向きの情報。
-   * 基準方向: 上面が北向き
+   * 基準方向:
+   * 上面が北向き、北面が下向き、下面が南向き、南面が上向き、左右面は上向き
+   * 0は基準方向、1は右90度回転
    */
   Dice(vector<int> initialFace, vector<int> initialDir) {
     assert(initialFace.size() == 6 && initialDir.size() == 6);
@@ -162,6 +164,6 @@ int main(void) {
       }
       res += curr[0].first;
     }
-    cout << res+1 << endl;
+    cout << res + 1 << endl;
   }
 }
